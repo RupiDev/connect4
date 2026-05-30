@@ -25,7 +25,7 @@
       letter-spacing: 4px;
       text-transform: uppercase;
       margin-bottom: 16px;
-      background: linear-gradient(135deg, #e63946, #f4d35e);
+      background: linear-gradient(135deg, #3a86ff, #06d6a0);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -52,8 +52,8 @@
     }
 
     .player-name-input:focus { border-color: rgba(255,255,255,0.5); }
-    .player-name-input.red-name   { border-color: rgba(230,57,70,0.5); }
-    .player-name-input.yellow-name{ border-color: rgba(244,211,94,0.5); }
+    .player-name-input.red-name   { border-color: rgba(58,134,255,0.5); }
+    .player-name-input.yellow-name{ border-color: rgba(6,214,160,0.5); }
     .vs { opacity: 0.4; font-size: 0.85rem; }
 
     /* ── status + error area ── */
@@ -104,8 +104,8 @@
       z-index: 10;
     }
 
-    #preview-coin.red    { background: #e63946; box-shadow: 0 0 16px rgba(230,57,70,0.7); }
-    #preview-coin.yellow { background: #f4d35e; box-shadow: 0 0 16px rgba(244,211,94,0.7); }
+    #preview-coin.red    { background: #3a86ff; box-shadow: 0 0 16px rgba(58,134,255,0.7); }
+    #preview-coin.yellow { background: #06d6a0; box-shadow: 0 0 16px rgba(6,214,160,0.7); }
     #preview-coin.visible { opacity: 0.85; }
 
     /* ── grid ── */
@@ -138,17 +138,17 @@
     }
 
     /* ghost (preview) in landing cell */
-    .cell.ghost-red    { background: rgba(230,57,70,0.25); }
-    .cell.ghost-yellow { background: rgba(244,211,94,0.25); }
+    .cell.ghost-red    { background: rgba(58,134,255,0.25); }
+    .cell.ghost-yellow { background: rgba(6,214,160,0.25); }
 
     /* filled cells */
     .cell.red {
-      background: #e63946;
-      box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3), 0 0 12px rgba(230,57,70,0.5);
+      background: #3a86ff;
+      box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3), 0 0 12px rgba(58,134,255,0.5);
     }
     .cell.yellow {
-      background: #f4d35e;
-      box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3), 0 0 12px rgba(244,211,94,0.5);
+      background: #06d6a0;
+      box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3), 0 0 12px rgba(6,214,160,0.5);
     }
 
     /* drop animation */
@@ -208,8 +208,8 @@
     }
 
     .score-value { font-size: 2rem; font-weight: 700; }
-    .score-box.red-score .score-value    { color: #e63946; text-shadow: 0 0 10px rgba(230,57,70,0.5); }
-    .score-box.yellow-score .score-value { color: #f4d35e; text-shadow: 0 0 10px rgba(244,211,94,0.5); }
+    .score-box.red-score .score-value    { color: #3a86ff; text-shadow: 0 0 10px rgba(58,134,255,0.5); }
+    .score-box.yellow-score .score-value { color: #06d6a0; text-shadow: 0 0 10px rgba(6,214,160,0.5); }
 
     #controls { margin-top: 24px; }
 
@@ -221,7 +221,7 @@
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.15s, transform 0.1s;
-      background: #e63946;
+      background: #3a86ff;
       color: #fff;
     }
 
@@ -457,7 +457,7 @@
     }
 
     function dot_html(color) {
-      const bg = color === 'red' ? '#e63946' : '#f4d35e';
+      const bg = color === 'red' ? '#3a86ff' : '#06d6a0';
       return `<span class="turn-indicator" style="background:${bg}"></span>`;
     }
 
