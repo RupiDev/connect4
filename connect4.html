@@ -17,6 +17,7 @@
       font-family: 'Segoe UI', sans-serif;
       color: #fff;
       padding: 20px;
+      user-select: none;
     }
 
     h1 {
@@ -29,12 +30,51 @@
       -webkit-text-fill-color: transparent;
     }
 
+    .player-names {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .player-name-input {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.95rem;
+      padding: 5px 10px;
+      text-align: center;
+      width: 120px;
+      outline: none;
+      transition: border-color 0.2s;
+      user-select: text;
+    }
+
+    .player-name-input:focus { border-color: rgba(255,255,255,0.5); }
+    .player-name-input.red-name   { border-color: rgba(230,57,70,0.5); }
+    .player-name-input.yellow-name{ border-color: rgba(244,211,94,0.5); }
+    .vs { opacity: 0.4; font-size: 0.85rem; }
+
+    /* ── status + error area ── */
     #status {
       font-size: 1.2rem;
-      margin-bottom: 20px;
       min-height: 1.8rem;
       text-align: center;
+      margin-bottom: 6px;
     }
+
+    #error-msg {
+      font-size: 0.9rem;
+      color: #ff6b6b;
+      min-height: 1.4rem;
+      text-align: center;
+      margin-bottom: 10px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    #error-msg.visible { opacity: 1; }
 
     .turn-indicator {
       display: inline-block;
@@ -43,34 +83,32 @@
       border-radius: 50%;
       vertical-align: middle;
       margin-right: 6px;
-      box-shadow: 0 0 8px currentColor;
     }
 
+    /* ── board wrapper + hover columns ── */
     #board-wrapper {
       position: relative;
-    }
-
-    #column-buttons {
-      display: grid;
-      grid-template-columns: repeat(7, 80px);
-      gap: 6px;
-      margin-bottom: 4px;
-    }
-
-    .col-btn {
-      height: 32px;
-      background: transparent;
-      border: none;
       cursor: pointer;
-      font-size: 1.2rem;
-      color: rgba(255,255,255,0.3);
-      transition: color 0.15s, transform 0.15s;
-      border-radius: 6px;
     }
 
-    .col-btn:hover { color: rgba(255,255,255,0.9); transform: translateY(3px); }
-    .col-btn:disabled { cursor: not-allowed; opacity: 0; }
+    /* floating preview coin above the board */
+    #preview-coin {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      top: -92px; /* above the board padding */
+      pointer-events: none;
+      opacity: 0;
+      transition: left 0.1s ease, opacity 0.15s;
+      z-index: 10;
+    }
 
+    #preview-coin.red    { background: #e63946; box-shadow: 0 0 16px rgba(230,57,70,0.7); }
+    #preview-coin.yellow { background: #f4d35e; box-shadow: 0 0 16px rgba(244,211,94,0.7); }
+    #preview-coin.visible { opacity: 0.85; }
+
+    /* ── grid ── */
     #board {
       display: grid;
       grid-template-columns: repeat(7, 80px);
@@ -80,6 +118,7 @@
       padding: 12px;
       border-radius: 16px;
       box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      position: relative;
     }
 
     .cell {
@@ -88,21 +127,57 @@
       border-radius: 50%;
       background: #0f3460;
       box-shadow: inset 0 4px 8px rgba(0,0,0,0.4);
-      transition: background 0.2s, box-shadow 0.2s;
+      transition: background 0.15s;
+      position: relative;
+      overflow: hidden;
     }
 
+    /* column hover highlight */
+    .cell.col-hover {
+      background: #163a6e;
+    }
+
+    /* ghost (preview) in landing cell */
+    .cell.ghost-red    { background: rgba(230,57,70,0.25); }
+    .cell.ghost-yellow { background: rgba(244,211,94,0.25); }
+
+    /* filled cells */
     .cell.red {
       background: #e63946;
       box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3), 0 0 12px rgba(230,57,70,0.5);
     }
-
     .cell.yellow {
       background: #f4d35e;
       box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3), 0 0 12px rgba(244,211,94,0.5);
     }
 
+    /* drop animation */
+    .cell.dropping {
+      animation: drop var(--drop-dur, 0.35s) cubic-bezier(0.33, 0, 0.66, 1.4) forwards;
+    }
+
+    @keyframes drop {
+      from { transform: translateY(var(--drop-from)); }
+      to   { transform: translateY(0); }
+    }
+
+    /* column full shake */
+    .col-shake {
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-6px); }
+      40%      { transform: translateX(6px); }
+      60%      { transform: translateX(-4px); }
+      80%      { transform: translateX(4px); }
+    }
+
+    /* win pulse */
     .cell.win {
       animation: pulse 0.6s ease-in-out infinite alternate;
+      z-index: 2;
     }
 
     @keyframes pulse {
@@ -110,26 +185,7 @@
       to   { transform: scale(1.12); }
     }
 
-    #controls {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    button.action {
-      padding: 10px 28px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-
-    button.action:hover { opacity: 0.85; transform: translateY(-1px); }
-
-    #restart-btn { background: #e63946; color: #fff; }
-
+    /* ── scores ── */
     .scores {
       display: flex;
       gap: 40px;
@@ -151,54 +207,41 @@
       opacity: 0.6;
     }
 
-    .score-value {
-      font-size: 2rem;
-      font-weight: 700;
-    }
-
-    .score-box.red-score .score-value  { color: #e63946; text-shadow: 0 0 10px rgba(230,57,70,0.5); }
+    .score-value { font-size: 2rem; font-weight: 700; }
+    .score-box.red-score .score-value    { color: #e63946; text-shadow: 0 0 10px rgba(230,57,70,0.5); }
     .score-box.yellow-score .score-value { color: #f4d35e; text-shadow: 0 0 10px rgba(244,211,94,0.5); }
 
-    .player-names {
-      display: flex;
-      gap: 40px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
+    #controls { margin-top: 24px; }
 
-    .player-name-input {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 6px;
+    button.action {
+      padding: 10px 28px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      background: #e63946;
       color: #fff;
-      font-size: 0.95rem;
-      padding: 5px 10px;
-      text-align: center;
-      width: 120px;
-      outline: none;
-      transition: border-color 0.2s;
     }
 
-    .player-name-input:focus { border-color: rgba(255,255,255,0.5); }
-    .player-name-input.red-name  { border-color: rgba(230,57,70,0.5); }
-    .player-name-input.yellow-name { border-color: rgba(244,211,94,0.5); }
-
-    .vs { opacity: 0.4; font-size: 0.85rem; }
+    button.action:hover { opacity: 0.85; transform: translateY(-1px); }
   </style>
 </head>
 <body>
   <h1>Connect 4</h1>
 
   <div class="player-names">
-    <input class="player-name-input red-name" id="name1" type="text" value="Player 1" maxlength="12">
+    <input class="player-name-input red-name"    id="name1" type="text" value="Player 1" maxlength="12">
     <span class="vs">vs</span>
     <input class="player-name-input yellow-name" id="name2" type="text" value="Player 2" maxlength="12">
   </div>
 
   <div id="status"></div>
+  <div id="error-msg"></div>
 
   <div id="board-wrapper">
-    <div id="column-buttons"></div>
+    <div id="preview-coin"></div>
     <div id="board"></div>
   </div>
 
@@ -219,19 +262,25 @@
 
   <script>
     const ROWS = 6, COLS = 7;
-    const COLORS = ['red', 'yellow'];
+    const CELL = 80, GAP = 6, PAD = 12;
+    const STEP = CELL + GAP; // 86px per cell
 
-    let board, currentPlayer, gameOver, scores;
+    let board, currentPlayer, gameOver, scores, animating, hoveredCol;
 
     function init() {
-      board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      board        = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
       currentPlayer = 0;
-      gameOver = false;
-      scores = scores || [0, 0];
+      gameOver     = false;
+      animating    = false;
+      hoveredCol   = -1;
+      scores       = scores || [0, 0];
       renderBoard();
-      renderColumnButtons();
       updateStatus();
+      hidePreview();
+      clearError();
     }
+
+    // ── render ──────────────────────────────────────────────
 
     function renderBoard() {
       const boardEl = document.getElementById('board');
@@ -247,74 +296,140 @@
       }
     }
 
-    function renderColumnButtons() {
-      const container = document.getElementById('column-buttons');
-      container.innerHTML = '';
-      for (let c = 0; c < COLS; c++) {
-        const btn = document.createElement('button');
-        btn.className = 'col-btn';
-        btn.textContent = '▼';
-        btn.dataset.col = c;
-        btn.addEventListener('click', () => dropPiece(c));
-        container.appendChild(btn);
+    function cellEl(r, c) {
+      return document.getElementById('board').children[r * COLS + c];
+    }
+
+    // ── hover preview ────────────────────────────────────────
+
+    function getColFromEvent(e) {
+      const boardEl = document.getElementById('board');
+      const rect    = boardEl.getBoundingClientRect();
+      const x       = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left - PAD;
+      const col     = Math.floor(x / STEP);
+      return (col >= 0 && col < COLS) ? col : -1;
+    }
+
+    function getDropRow(col) {
+      for (let r = ROWS - 1; r >= 0; r--) {
+        if (!board[r][col]) return r;
       }
+      return -1;
     }
 
-    function getPlayerName(idx) {
-      return document.getElementById('name' + (idx + 1)).value.trim() || ('Player ' + (idx + 1));
+    function updateHover(col) {
+      if (gameOver || animating) return;
+
+      // clear previous ghost
+      if (hoveredCol !== -1) {
+        for (let r = 0; r < ROWS; r++) {
+          const el = cellEl(r, hoveredCol);
+          el.classList.remove('col-hover', 'ghost-red', 'ghost-yellow');
+        }
+      }
+
+      hoveredCol = col;
+      if (col === -1) { hidePreview(); return; }
+
+      const color  = ['red', 'yellow'][currentPlayer];
+      const dropRow = getDropRow(col);
+
+      // highlight column
+      for (let r = 0; r < ROWS; r++) {
+        const el = cellEl(r, col);
+        if (!board[r][col]) el.classList.add('col-hover');
+      }
+
+      // ghost in landing cell
+      if (dropRow !== -1) {
+        cellEl(dropRow, col).classList.add(`ghost-${color}`);
+      }
+
+      // floating preview coin
+      const coin = document.getElementById('preview-coin');
+      coin.className = `${color} visible`;
+      const leftPx = PAD + col * STEP;
+      coin.style.left = leftPx + 'px';
     }
 
-    function updateStatus(winCells) {
-      const statusEl = document.getElementById('status');
-      if (gameOver) return;
-      const color = COLORS[currentPlayer];
-      const dot = `<span class="turn-indicator" style="background:${color === 'red' ? '#e63946' : '#f4d35e'}"></span>`;
-      statusEl.innerHTML = `${dot} ${getPlayerName(currentPlayer)}'s turn`;
+    function hidePreview() {
+      document.getElementById('preview-coin').className = '';
+      hoveredCol = -1;
     }
+
+    // ── drop logic ───────────────────────────────────────────
 
     function dropPiece(col) {
-      if (gameOver) return;
-      let row = -1;
-      for (let r = ROWS - 1; r >= 0; r--) {
-        if (!board[r][col]) { row = r; break; }
-      }
-      if (row === -1) return;
+      if (gameOver || animating || col === -1) return;
 
-      board[row][col] = COLORS[currentPlayer];
-
-      const winCells = checkWin(row, col);
-      if (winCells) {
-        renderBoard();
-        highlightWin(winCells);
-        scores[currentPlayer]++;
-        document.getElementById('score' + (currentPlayer + 1)).textContent = scores[currentPlayer];
-        document.getElementById('score-label-' + (currentPlayer + 1)).textContent = getPlayerName(currentPlayer);
-        const color = COLORS[currentPlayer];
-        const dot = `<span class="turn-indicator" style="background:${color === 'red' ? '#e63946' : '#f4d35e'}"></span>`;
-        document.getElementById('status').innerHTML = `${dot} ${getPlayerName(currentPlayer)} wins!`;
-        gameOver = true;
-        disableButtons();
+      const row = getDropRow(col);
+      if (row === -1) {
+        showError(`Column ${col + 1} is full! Pick another.`);
+        shakeColumn(col);
         return;
       }
 
-      if (board[0].every(cell => cell !== null)) {
-        renderBoard();
-        document.getElementById('status').textContent = "It's a draw!";
-        gameOver = true;
-        disableButtons();
-        return;
-      }
+      clearError();
+      animating = true;
+      board[row][col] = ['red', 'yellow'][currentPlayer];
 
-      currentPlayer = 1 - currentPlayer;
+      // clear ghost before animating
+      updateHover(-1);
+
+      // render the new piece with drop animation
       renderBoard();
-      updateStatus();
-      updateScoreLabels();
+      const el = cellEl(row, col);
+      const fallPx = (row + 1) * STEP; // distance from above-board to landing row
+      el.style.setProperty('--drop-from', `-${fallPx}px`);
+      el.style.setProperty('--drop-dur',  `${0.1 + row * 0.04}s`);
+      el.classList.add('dropping');
+
+      el.addEventListener('animationend', () => {
+        el.classList.remove('dropping');
+        animating = false;
+
+        const winCells = checkWin(row, col);
+        if (winCells) {
+          highlightWin(winCells);
+          scores[currentPlayer]++;
+          document.getElementById('score' + (currentPlayer + 1)).textContent = scores[currentPlayer];
+          const color = ['red','yellow'][currentPlayer];
+          const dot = dot_html(color);
+          document.getElementById('status').innerHTML = `${dot} ${getPlayerName(currentPlayer)} wins! 🎉`;
+          gameOver = true;
+          return;
+        }
+
+        if (board[0].every(cell => cell !== null)) {
+          document.getElementById('status').textContent = "It's a draw!";
+          gameOver = true;
+          return;
+        }
+
+        currentPlayer = 1 - currentPlayer;
+        updateStatus();
+        updateScoreLabels();
+        // restore hover for current mouse position
+        updateHover(hoveredCol);
+      }, { once: true });
     }
+
+    function shakeColumn(col) {
+      for (let r = 0; r < ROWS; r++) {
+        const el = cellEl(r, col);
+        el.classList.remove('col-shake');
+        void el.offsetWidth; // reflow
+        el.classList.add('col-shake');
+        el.addEventListener('animationend', () => el.classList.remove('col-shake'), { once: true });
+      }
+    }
+
+    // ── win detection ────────────────────────────────────────
 
     function checkWin(row, col) {
       const color = board[row][col];
-      const directions = [[0,1],[1,0],[1,1],[1,-1]];
-      for (const [dr, dc] of directions) {
+      const dirs  = [[0,1],[1,0],[1,1],[1,-1]];
+      for (const [dr, dc] of dirs) {
         const cells = [[row, col]];
         for (let i = 1; i < 4; i++) {
           const r = row + dr * i, c = col + dc * i;
@@ -332,20 +447,76 @@
     }
 
     function highlightWin(cells) {
-      cells.forEach(([r, c]) => {
-        const idx = r * COLS + c;
-        document.getElementById('board').children[idx].classList.add('win');
-      });
+      cells.forEach(([r, c]) => cellEl(r, c).classList.add('win'));
     }
 
-    function disableButtons() {
-      document.querySelectorAll('.col-btn').forEach(b => b.disabled = true);
+    // ── helpers ──────────────────────────────────────────────
+
+    function getPlayerName(idx) {
+      return document.getElementById('name' + (idx + 1)).value.trim() || ('Player ' + (idx + 1));
+    }
+
+    function dot_html(color) {
+      const bg = color === 'red' ? '#e63946' : '#f4d35e';
+      return `<span class="turn-indicator" style="background:${bg}"></span>`;
+    }
+
+    function updateStatus() {
+      if (gameOver) return;
+      const color = ['red','yellow'][currentPlayer];
+      document.getElementById('status').innerHTML =
+        `${dot_html(color)} ${getPlayerName(currentPlayer)}'s turn`;
     }
 
     function updateScoreLabels() {
       document.getElementById('score-label-1').textContent = getPlayerName(0);
       document.getElementById('score-label-2').textContent = getPlayerName(1);
     }
+
+    let errorTimer;
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.classList.add('visible');
+      clearTimeout(errorTimer);
+      errorTimer = setTimeout(() => el.classList.remove('visible'), 2000);
+    }
+
+    function clearError() {
+      const el = document.getElementById('error-msg');
+      el.classList.remove('visible');
+      clearTimeout(errorTimer);
+    }
+
+    // ── event listeners ──────────────────────────────────────
+
+    const boardWrapper = document.getElementById('board-wrapper');
+
+    // mouse events
+    boardWrapper.addEventListener('mousemove', e => {
+      updateHover(getColFromEvent(e));
+    });
+
+    boardWrapper.addEventListener('mouseleave', () => {
+      updateHover(-1);
+    });
+
+    boardWrapper.addEventListener('click', e => {
+      dropPiece(getColFromEvent(e));
+    });
+
+    // touch events (mobile)
+    boardWrapper.addEventListener('touchstart', e => {
+      e.preventDefault();
+      updateHover(getColFromEvent(e));
+    }, { passive: false });
+
+    boardWrapper.addEventListener('touchend', e => {
+      e.preventDefault();
+      const col = getColFromEvent({ clientX: e.changedTouches[0].clientX });
+      updateHover(-1);
+      dropPiece(col);
+    }, { passive: false });
 
     document.getElementById('restart-btn').addEventListener('click', () => {
       updateScoreLabels();
