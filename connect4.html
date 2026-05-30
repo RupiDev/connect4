@@ -30,6 +30,46 @@
       -webkit-text-fill-color: transparent;
     }
 
+    /* ── mode + difficulty toggles ── */
+    .toggle-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .toggle-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.5;
+      margin-right: 4px;
+    }
+
+    .toggle-btn {
+      padding: 6px 16px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .toggle-btn:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+
+    .toggle-btn.active {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.6);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    #difficulty-row { display: none; }
+    #difficulty-row.visible { display: flex; }
+
+    /* ── player names ── */
     .player-names {
       display: flex;
       gap: 40px;
@@ -51,18 +91,34 @@
       user-select: text;
     }
 
-    .player-name-input:focus { border-color: rgba(255,255,255,0.5); }
-    .player-name-input.red-name   { border-color: rgba(58,134,255,0.5); }
-    .player-name-input.yellow-name{ border-color: rgba(6,214,160,0.5); }
+    .player-name-input:focus  { border-color: rgba(255,255,255,0.5); }
+    .player-name-input.p1     { border-color: rgba(58,134,255,0.5); }
+    .player-name-input.p2     { border-color: rgba(6,214,160,0.5); }
+    .player-name-input:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
     .vs { opacity: 0.4; font-size: 0.85rem; }
 
-    /* ── status + error area ── */
+    /* ── status + error ── */
     #status {
       font-size: 1.2rem;
       min-height: 1.8rem;
       text-align: center;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
+
+    #thinking-msg {
+      font-size: 0.85rem;
+      color: #06d6a0;
+      min-height: 1.2rem;
+      text-align: center;
+      margin-bottom: 2px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    #thinking-msg.visible { opacity: 1; }
 
     #error-msg {
       font-size: 0.9rem;
@@ -73,7 +129,6 @@
       opacity: 0;
       transition: opacity 0.2s;
     }
-
     #error-msg.visible { opacity: 1; }
 
     .turn-indicator {
@@ -85,30 +140,30 @@
       margin-right: 6px;
     }
 
-    /* ── board wrapper + hover columns ── */
+    /* ── board ── */
     #board-wrapper {
       position: relative;
       cursor: pointer;
     }
 
-    /* floating preview coin above the board */
+    #board-wrapper.ai-turn { cursor: wait; }
+
     #preview-coin {
       position: absolute;
       width: 80px;
       height: 80px;
       border-radius: 50%;
-      top: -92px; /* above the board padding */
+      top: -92px;
       pointer-events: none;
       opacity: 0;
       transition: left 0.1s ease, opacity 0.15s;
       z-index: 10;
     }
 
-    #preview-coin.red    { background: #3a86ff; box-shadow: 0 0 16px rgba(58,134,255,0.7); }
-    #preview-coin.yellow { background: #06d6a0; box-shadow: 0 0 16px rgba(6,214,160,0.7); }
+    #preview-coin.blue  { background: #3a86ff; box-shadow: 0 0 16px rgba(58,134,255,0.7); }
+    #preview-coin.green { background: #06d6a0; box-shadow: 0 0 16px rgba(6,214,160,0.7); }
     #preview-coin.visible { opacity: 0.85; }
 
-    /* ── grid ── */
     #board {
       display: grid;
       grid-template-columns: repeat(7, 80px);
@@ -132,16 +187,11 @@
       overflow: hidden;
     }
 
-    /* column hover highlight */
-    .cell.col-hover {
-      background: #163a6e;
-    }
+    .cell.col-hover  { background: #163a6e; }
 
-    /* ghost (preview) in landing cell */
-    .cell.ghost-red    { background: rgba(58,134,255,0.25); }
-    .cell.ghost-yellow { background: rgba(6,214,160,0.25); }
+    .cell.ghost-blue  { background: rgba(58,134,255,0.25); }
+    .cell.ghost-green { background: rgba(6,214,160,0.25); }
 
-    /* filled cells */
     .cell.red {
       background: #3a86ff;
       box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3), 0 0 12px rgba(58,134,255,0.5);
@@ -151,7 +201,6 @@
       box-shadow: inset 0 -3px 6px rgba(0,0,0,0.3), 0 0 12px rgba(6,214,160,0.5);
     }
 
-    /* drop animation */
     .cell.dropping {
       animation: drop var(--drop-dur, 0.35s) cubic-bezier(0.33, 0, 0.66, 1.4) forwards;
     }
@@ -161,20 +210,16 @@
       to   { transform: translateY(0); }
     }
 
-    /* column full shake */
-    .col-shake {
-      animation: shake 0.4s ease;
-    }
+    .col-shake { animation: shake 0.4s ease; }
 
     @keyframes shake {
       0%,100% { transform: translateX(0); }
-      20%      { transform: translateX(-6px); }
-      40%      { transform: translateX(6px); }
-      60%      { transform: translateX(-4px); }
-      80%      { transform: translateX(4px); }
+      20%     { transform: translateX(-6px); }
+      40%     { transform: translateX(6px); }
+      60%     { transform: translateX(-4px); }
+      80%     { transform: translateX(4px); }
     }
 
-    /* win pulse */
     .cell.win {
       animation: pulse 0.6s ease-in-out infinite alternate;
       z-index: 2;
@@ -190,7 +235,6 @@
       display: flex;
       gap: 40px;
       margin-top: 20px;
-      font-size: 1rem;
     }
 
     .score-box {
@@ -208,8 +252,8 @@
     }
 
     .score-value { font-size: 2rem; font-weight: 700; }
-    .score-box.red-score .score-value    { color: #3a86ff; text-shadow: 0 0 10px rgba(58,134,255,0.5); }
-    .score-box.yellow-score .score-value { color: #06d6a0; text-shadow: 0 0 10px rgba(6,214,160,0.5); }
+    .score-box.p1-score .score-value { color: #3a86ff; text-shadow: 0 0 10px rgba(58,134,255,0.5); }
+    .score-box.p2-score .score-value { color: #06d6a0; text-shadow: 0 0 10px rgba(6,214,160,0.5); }
 
     #controls { margin-top: 24px; }
 
@@ -231,13 +275,29 @@
 <body>
   <h1>Connect 4</h1>
 
+  <!-- mode toggle -->
+  <div class="toggle-row">
+    <span class="toggle-label">Mode</span>
+    <button class="toggle-btn active" id="mode-2p">2 Players</button>
+    <button class="toggle-btn" id="mode-ai">vs AI</button>
+  </div>
+
+  <!-- difficulty (only shown in AI mode) -->
+  <div class="toggle-row" id="difficulty-row">
+    <span class="toggle-label">AI</span>
+    <button class="toggle-btn active" data-diff="easy">Easy</button>
+    <button class="toggle-btn" data-diff="medium">Medium</button>
+    <button class="toggle-btn" data-diff="hard">Hard</button>
+  </div>
+
   <div class="player-names">
-    <input class="player-name-input red-name"    id="name1" type="text" value="Player 1" maxlength="12">
+    <input class="player-name-input p1" id="name1" type="text" value="Player 1" maxlength="12">
     <span class="vs">vs</span>
-    <input class="player-name-input yellow-name" id="name2" type="text" value="Player 2" maxlength="12">
+    <input class="player-name-input p2" id="name2" type="text" value="Player 2" maxlength="12">
   </div>
 
   <div id="status"></div>
+  <div id="thinking-msg">AI is thinking…</div>
   <div id="error-msg"></div>
 
   <div id="board-wrapper">
@@ -246,11 +306,11 @@
   </div>
 
   <div class="scores">
-    <div class="score-box red-score">
+    <div class="score-box p1-score">
       <span class="score-label" id="score-label-1">Player 1</span>
       <span class="score-value" id="score1">0</span>
     </div>
-    <div class="score-box yellow-score">
+    <div class="score-box p2-score">
       <span class="score-label" id="score-label-2">Player 2</span>
       <span class="score-value" id="score2">0</span>
     </div>
@@ -263,21 +323,40 @@
   <script>
     const ROWS = 6, COLS = 7;
     const CELL = 80, GAP = 6, PAD = 12;
-    const STEP = CELL + GAP; // 86px per cell
+    const STEP = CELL + GAP;
+    // Search center columns first for better alpha-beta pruning
+    const COL_ORDER = [3, 2, 4, 1, 5, 0, 6];
+    const DEPTH_MAP  = { easy: 2, medium: 4, hard: 7 };
 
     let board, currentPlayer, gameOver, scores, animating, hoveredCol;
+    let aiMode = false, difficulty = 'easy';
+
+    // ── init ────────────────────────────────────────────────
 
     function init() {
-      board        = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      board         = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
       currentPlayer = 0;
-      gameOver     = false;
-      animating    = false;
-      hoveredCol   = -1;
-      scores       = scores || [0, 0];
+      gameOver      = false;
+      animating     = false;
+      hoveredCol    = -1;
+      scores        = scores || [0, 0];
       renderBoard();
       updateStatus();
       hidePreview();
       clearError();
+      setThinking(false);
+      document.getElementById('board-wrapper').classList.remove('ai-turn');
+
+      if (aiMode) {
+        document.getElementById('name2').value = 'AI';
+        document.getElementById('name2').disabled = true;
+      } else {
+        document.getElementById('name2').disabled = false;
+        if (document.getElementById('name2').value === 'AI') {
+          document.getElementById('name2').value = 'Player 2';
+        }
+      }
+      updateScoreLabels();
     }
 
     // ── render ──────────────────────────────────────────────
@@ -303,10 +382,9 @@
     // ── hover preview ────────────────────────────────────────
 
     function getColFromEvent(e) {
-      const boardEl = document.getElementById('board');
-      const rect    = boardEl.getBoundingClientRect();
-      const x       = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left - PAD;
-      const col     = Math.floor(x / STEP);
+      const rect = document.getElementById('board').getBoundingClientRect();
+      const x    = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left - PAD;
+      const col  = Math.floor(x / STEP);
       return (col >= 0 && col < COLS) ? col : -1;
     }
 
@@ -317,39 +395,39 @@
       return -1;
     }
 
-    function updateHover(col) {
-      if (gameOver || animating) return;
+    function colorName(playerIdx) {
+      return playerIdx === 0 ? 'blue' : 'green';
+    }
 
-      // clear previous ghost
+    function cssClass(playerIdx) {
+      return playerIdx === 0 ? 'red' : 'yellow';
+    }
+
+    function updateHover(col) {
+      if (gameOver || animating || (aiMode && currentPlayer === 1)) return;
+
       if (hoveredCol !== -1) {
         for (let r = 0; r < ROWS; r++) {
-          const el = cellEl(r, hoveredCol);
-          el.classList.remove('col-hover', 'ghost-red', 'ghost-yellow');
+          cellEl(r, hoveredCol).classList.remove('col-hover', 'ghost-blue', 'ghost-green');
         }
       }
 
       hoveredCol = col;
       if (col === -1) { hidePreview(); return; }
 
-      const color  = ['red', 'yellow'][currentPlayer];
+      const cn    = colorName(currentPlayer);
       const dropRow = getDropRow(col);
 
-      // highlight column
       for (let r = 0; r < ROWS; r++) {
-        const el = cellEl(r, col);
-        if (!board[r][col]) el.classList.add('col-hover');
+        if (!board[r][col]) cellEl(r, col).classList.add('col-hover');
       }
-
-      // ghost in landing cell
       if (dropRow !== -1) {
-        cellEl(dropRow, col).classList.add(`ghost-${color}`);
+        cellEl(dropRow, col).classList.add(`ghost-${cn}`);
       }
 
-      // floating preview coin
       const coin = document.getElementById('preview-coin');
-      coin.className = `${color} visible`;
-      const leftPx = PAD + col * STEP;
-      coin.style.left = leftPx + 'px';
+      coin.className = `${cn} visible`;
+      coin.style.left = (PAD + col * STEP) + 'px';
     }
 
     function hidePreview() {
@@ -357,10 +435,11 @@
       hoveredCol = -1;
     }
 
-    // ── drop logic ───────────────────────────────────────────
+    // ── drop piece ───────────────────────────────────────────
 
     function dropPiece(col) {
       if (gameOver || animating || col === -1) return;
+      if (aiMode && currentPlayer === 1) return; // block clicks on AI turn
 
       const row = getDropRow(col);
       if (row === -1) {
@@ -370,17 +449,17 @@
       }
 
       clearError();
+      playDrop(row, col);
+    }
+
+    function playDrop(row, col) {
       animating = true;
-      board[row][col] = ['red', 'yellow'][currentPlayer];
-
-      // clear ghost before animating
+      board[row][col] = cssClass(currentPlayer);
       updateHover(-1);
-
-      // render the new piece with drop animation
       renderBoard();
+
       const el = cellEl(row, col);
-      const fallPx = (row + 1) * STEP; // distance from above-board to landing row
-      el.style.setProperty('--drop-from', `-${fallPx}px`);
+      el.style.setProperty('--drop-from', `-${(row + 1) * STEP}px`);
       el.style.setProperty('--drop-dur',  `${0.1 + row * 0.04}s`);
       el.classList.add('dropping');
 
@@ -393,14 +472,15 @@
           highlightWin(winCells);
           scores[currentPlayer]++;
           document.getElementById('score' + (currentPlayer + 1)).textContent = scores[currentPlayer];
-          const color = ['red','yellow'][currentPlayer];
-          const dot = dot_html(color);
-          document.getElementById('status').innerHTML = `${dot} ${getPlayerName(currentPlayer)} wins! 🎉`;
+          const dot = dotHtml(currentPlayer);
+          document.getElementById('status').innerHTML =
+            `${dot} ${getPlayerName(currentPlayer)} wins! 🎉`;
           gameOver = true;
+          document.getElementById('board-wrapper').classList.remove('ai-turn');
           return;
         }
 
-        if (board[0].every(cell => cell !== null)) {
+        if (board[0].every(c => c !== null)) {
           document.getElementById('status').textContent = "It's a draw!";
           gameOver = true;
           return;
@@ -409,8 +489,9 @@
         currentPlayer = 1 - currentPlayer;
         updateStatus();
         updateScoreLabels();
-        // restore hover for current mouse position
         updateHover(hoveredCol);
+
+        if (aiMode && currentPlayer === 1) scheduleAIMove();
       }, { once: true });
     }
 
@@ -418,13 +499,157 @@
       for (let r = 0; r < ROWS; r++) {
         const el = cellEl(r, col);
         el.classList.remove('col-shake');
-        void el.offsetWidth; // reflow
+        void el.offsetWidth;
         el.classList.add('col-shake');
         el.addEventListener('animationend', () => el.classList.remove('col-shake'), { once: true });
       }
     }
 
-    // ── win detection ────────────────────────────────────────
+    // ── AI ───────────────────────────────────────────────────
+
+    function scheduleAIMove() {
+      document.getElementById('board-wrapper').classList.add('ai-turn');
+      setThinking(true);
+      setTimeout(() => {
+        const depth = DEPTH_MAP[difficulty];
+        const col   = getBestMove(depth);
+        setThinking(false);
+        document.getElementById('board-wrapper').classList.remove('ai-turn');
+        const row = getDropRow(col);
+        playDrop(row, col);
+      }, 300);
+    }
+
+    function getBestMove(depth) {
+      let bestScore = -Infinity;
+      let bestCol   = COL_ORDER.find(c => getDropRowBoard(board, c) !== -1);
+
+      for (const col of COL_ORDER) {
+        const row = getDropRowBoard(board, col);
+        if (row === -1) continue;
+        board[row][col] = 'yellow';
+        const score = minimax(board, depth - 1, -Infinity, Infinity, false, row, col);
+        board[row][col] = null;
+        if (score > bestScore) { bestScore = score; bestCol = col; }
+      }
+      return bestCol;
+    }
+
+    // Minimax with alpha-beta pruning. AI = 'yellow', Human = 'red'.
+    function minimax(b, depth, alpha, beta, isMaximizing, lastRow, lastCol) {
+      if (isWinningBoard(b, lastRow, lastCol)) {
+        return b[lastRow][lastCol] === 'yellow'
+          ? 100000 + depth   // AI wins — prefer sooner
+          : -100000 - depth; // Human wins
+      }
+
+      const valid = validCols(b);
+      if (valid.length === 0) return 0; // draw
+      if (depth === 0) return scoreBoard(b);
+
+      if (isMaximizing) {
+        let best = -Infinity;
+        for (const col of COL_ORDER) {
+          if (!valid.includes(col)) continue;
+          const row = getDropRowBoard(b, col);
+          b[row][col] = 'yellow';
+          best = Math.max(best, minimax(b, depth - 1, alpha, beta, false, row, col));
+          b[row][col] = null;
+          alpha = Math.max(alpha, best);
+          if (alpha >= beta) break;
+        }
+        return best;
+      } else {
+        let best = Infinity;
+        for (const col of COL_ORDER) {
+          if (!valid.includes(col)) continue;
+          const row = getDropRowBoard(b, col);
+          b[row][col] = 'red';
+          best = Math.min(best, minimax(b, depth - 1, alpha, beta, true, row, col));
+          b[row][col] = null;
+          beta = Math.min(beta, best);
+          if (alpha >= beta) break;
+        }
+        return best;
+      }
+    }
+
+    function validCols(b) {
+      const out = [];
+      for (let c = 0; c < COLS; c++) { if (!b[0][c]) out.push(c); }
+      return out;
+    }
+
+    function getDropRowBoard(b, col) {
+      for (let r = ROWS - 1; r >= 0; r--) { if (!b[r][col]) return r; }
+      return -1;
+    }
+
+    function isWinningBoard(b, row, col) {
+      const color = b[row][col];
+      const dirs  = [[0,1],[1,0],[1,1],[1,-1]];
+      for (const [dr, dc] of dirs) {
+        let n = 1;
+        for (let i = 1; i < 4; i++) {
+          const r = row + dr * i, c = col + dc * i;
+          if (r >= 0 && r < ROWS && c >= 0 && c < COLS && b[r][c] === color) n++;
+          else break;
+        }
+        for (let i = 1; i < 4; i++) {
+          const r = row - dr * i, c = col - dc * i;
+          if (r >= 0 && r < ROWS && c >= 0 && c < COLS && b[r][c] === color) n++;
+          else break;
+        }
+        if (n >= 4) return true;
+      }
+      return false;
+    }
+
+    function scoreBoard(b) {
+      let score = 0;
+
+      // Center column preference
+      for (let r = 0; r < ROWS; r++) {
+        if (b[r][3] === 'yellow') score += 3;
+      }
+
+      // Score all windows of 4
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c <= COLS - 4; c++) {
+          score += scoreWindow([b[r][c], b[r][c+1], b[r][c+2], b[r][c+3]]);
+        }
+      }
+      for (let c = 0; c < COLS; c++) {
+        for (let r = 0; r <= ROWS - 4; r++) {
+          score += scoreWindow([b[r][c], b[r+1][c], b[r+2][c], b[r+3][c]]);
+        }
+      }
+      for (let r = 3; r < ROWS; r++) {
+        for (let c = 0; c <= COLS - 4; c++) {
+          score += scoreWindow([b[r][c], b[r-1][c+1], b[r-2][c+2], b[r-3][c+3]]);
+        }
+      }
+      for (let r = 0; r <= ROWS - 4; r++) {
+        for (let c = 0; c <= COLS - 4; c++) {
+          score += scoreWindow([b[r][c], b[r+1][c+1], b[r+2][c+2], b[r+3][c+3]]);
+        }
+      }
+      return score;
+    }
+
+    function scoreWindow(w) {
+      const ai    = w.filter(c => c === 'yellow').length;
+      const human = w.filter(c => c === 'red').length;
+      const empty = w.filter(c => !c).length;
+      if (ai > 0 && human > 0) return 0;
+      if (ai === 3 && empty === 1) return 50;
+      if (ai === 2 && empty === 2) return 10;
+      if (human === 3 && empty === 1) return -80;
+      if (human === 2 && empty === 2) return -10;
+      return 0;
+    }
+
+    // ── win detection (game board) ───────────────────────────
 
     function checkWin(row, col) {
       const color = board[row][col];
@@ -456,21 +681,24 @@
       return document.getElementById('name' + (idx + 1)).value.trim() || ('Player ' + (idx + 1));
     }
 
-    function dot_html(color) {
-      const bg = color === 'red' ? '#3a86ff' : '#06d6a0';
+    function dotHtml(playerIdx) {
+      const bg = playerIdx === 0 ? '#3a86ff' : '#06d6a0';
       return `<span class="turn-indicator" style="background:${bg}"></span>`;
     }
 
     function updateStatus() {
       if (gameOver) return;
-      const color = ['red','yellow'][currentPlayer];
       document.getElementById('status').innerHTML =
-        `${dot_html(color)} ${getPlayerName(currentPlayer)}'s turn`;
+        `${dotHtml(currentPlayer)} ${getPlayerName(currentPlayer)}'s turn`;
     }
 
     function updateScoreLabels() {
       document.getElementById('score-label-1').textContent = getPlayerName(0);
       document.getElementById('score-label-2').textContent = getPlayerName(1);
+    }
+
+    function setThinking(on) {
+      document.getElementById('thinking-msg').classList.toggle('visible', on);
     }
 
     let errorTimer;
@@ -483,8 +711,7 @@
     }
 
     function clearError() {
-      const el = document.getElementById('error-msg');
-      el.classList.remove('visible');
+      document.getElementById('error-msg').classList.remove('visible');
       clearTimeout(errorTimer);
     }
 
@@ -492,20 +719,10 @@
 
     const boardWrapper = document.getElementById('board-wrapper');
 
-    // mouse events
-    boardWrapper.addEventListener('mousemove', e => {
-      updateHover(getColFromEvent(e));
-    });
+    boardWrapper.addEventListener('mousemove',  e => updateHover(getColFromEvent(e)));
+    boardWrapper.addEventListener('mouseleave', () => updateHover(-1));
+    boardWrapper.addEventListener('click',      e => dropPiece(getColFromEvent(e)));
 
-    boardWrapper.addEventListener('mouseleave', () => {
-      updateHover(-1);
-    });
-
-    boardWrapper.addEventListener('click', e => {
-      dropPiece(getColFromEvent(e));
-    });
-
-    // touch events (mobile)
     boardWrapper.addEventListener('touchstart', e => {
       e.preventDefault();
       updateHover(getColFromEvent(e));
@@ -517,6 +734,33 @@
       updateHover(-1);
       dropPiece(col);
     }, { passive: false });
+
+    // mode buttons
+    document.getElementById('mode-2p').addEventListener('click', () => {
+      aiMode = false;
+      document.getElementById('mode-2p').classList.add('active');
+      document.getElementById('mode-ai').classList.remove('active');
+      document.getElementById('difficulty-row').classList.remove('visible');
+      init();
+    });
+
+    document.getElementById('mode-ai').addEventListener('click', () => {
+      aiMode = true;
+      document.getElementById('mode-ai').classList.add('active');
+      document.getElementById('mode-2p').classList.remove('active');
+      document.getElementById('difficulty-row').classList.add('visible');
+      init();
+    });
+
+    // difficulty buttons
+    document.querySelectorAll('[data-diff]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        difficulty = btn.dataset.diff;
+        document.querySelectorAll('[data-diff]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        init();
+      });
+    });
 
     document.getElementById('restart-btn').addEventListener('click', () => {
       updateScoreLabels();
